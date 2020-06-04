@@ -1,18 +1,18 @@
 ﻿@inject IJSRuntime JsRuntime;
 
-@if (ShouldComponentRender)
-{
+
     <div @ref="_animationContainer">
         @if (ShouldComponentRender)
         {
             @ChildContent
         }
     </div>
-}
 
 
 @code{
+
     private ElementReference _animationContainer;
+    private string _previousCssAnimationName = null;
 
     public bool ShouldComponentRender { get; set; } = true;
 
@@ -20,7 +20,8 @@
     public RenderFragment ChildContent { get; set; }
 
     [Parameter]
-    public string CssAnimationName { get; set; }
+    public string CssAnimationName { get; set; } = null;
+
 
 
     protected override void OnAfterRender(bool firstRender)
@@ -29,12 +30,26 @@
         {
             _animationContainer.RegisterForAnimationEnded(JsRuntime, (animationName) =>
             {
-                if (string.IsNullOrWhiteSpace(CssAnimationName) || animationName == CssAnimationName)
+                Console.WriteLine($"Animation End: ${animationName}");
+                if (CssAnimationName != null && CssAnimationName == animationName)
                 {
+                    Console.WriteLine($"Triggered: ${animationName}");
                     ShouldComponentRender = false;
                     StateHasChanged();
                 }
             });
         }
+        else
+        {
+            if (_previousCssAnimationName != CssAnimationName)
+            {
+                _previousCssAnimationName = CssAnimationName;
+                ShouldComponentRender = true;
+                StateHasChanged();
+            } 
+
+        }
+
     }
+
 }
